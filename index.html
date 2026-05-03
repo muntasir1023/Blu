@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLU | The Origin - By Rafsan TheChotoBhai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #ff2d55;
+            --bg: #030303;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --shimmer: linear-gradient(112deg, transparent 30%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 60%, transparent 70%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Responsive Cursor */
+        #cursor, #cursor-follower {
+            display: none;
+        }
+        @media (pointer: fine) {
+            #cursor, #cursor-follower { display: block; }
+        }
+
+        /* Better Text Selection */
+        ::selection {
+            background: var(--primary);
+            color: black;
+        }
+
+        #cursor {
+            width: 6px; height: 6px; background: var(--primary);
+            border-radius: 50%; position: fixed; pointer-events: none; z-index: 10000;
+        }
+
+        #cursor-follower {
+            width: 34px; height: 34px; border: 1px solid var(--primary);
+            border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
+            transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.5, 1);
+        }
+
+        .noise-layer {
+            position: fixed; inset: 0;
+            background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+            opacity: 0.03; pointer-events: none; z-index: 9998;
+        }
+
+        .hero-heading {
+            font-size: clamp(2.5rem, 12vw, 10rem);
+            line-height: 0.85; letter-spacing: -0.06em;
+            font-weight: 800; font-style: italic;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: clamp(1.5rem, 5vw, 2.5rem);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--shimmer);
+            background-size: 200% 100%;
+            background-position: -200% 0;
+            transition: 0.8s opacity;
+            pointer-events: none;
+        }
+
+        .glass-card:hover::before {
+            background-position: 200% 0;
+            transition: 1.5s background-position cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-active {
+            background: rgba(3, 3, 3, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+
+        .progress-bar {
+            position: fixed; top: 0; left: 0; width: 0%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary));
+            z-index: 10002;
+        }
+
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            z-index: -1; opacity: 0.15; pointer-events: none;
+        }
+
+        /* Flavor Specifics */
+        .flavor-card:hover {
+            transform: translateY(-15px) !important;
+            border-color: var(--card-accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px;
+            background: var(--primary); transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+
+        /* Mobile Nav Toggle */
+        #mobile-menu {
+            clip-path: circle(0% at 100% 0%);
+            transition: clip-path 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #mobile-menu.active {
+            clip-path: circle(150% at 100% 0%);
+        }
+
+        .signature-font {
+            font-family: serif;
+            font-style: italic;
+            opacity: 0.6;
+        }
+        
+        .spec-item {
+            border-left: 1px solid var(--primary);
+            padding-left: 1rem;
+        }
+
+        .flavor-img-wrapper {
+            perspective: 1000px;
+        }
+        
+        .flavor-img {
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: drop-shadow(0 20px 30px var(--shadow-color));
+            will-change: transform;
+        }
+        
+        .flavor-card:hover .flavor-img {
+            transform: rotateY(15deg) rotateX(10deg) scale(1.1);
+        }
+
+        .protocol-step {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .protocol-step:hover { transform: scale(1.02); }
+
+        /* Mobile GPU Optimizations */
+        @media (max-width: 768px) {
+            .blob { filter: blur(60px); opacity: 0.1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise-layer"></div>
+    <div class="progress-bar" id="scroll-bar"></div>
+
+    <!-- Preloader -->
+    <div id="loader" class="fixed inset-0 bg-black z-[10001] flex items-center justify-center overflow-hidden">
+        <div class="text-center">
+            <div class="overflow-hidden mb-2">
+                <span id="loader-title" class="block text-4xl font-black italic tracking-tighter uppercase">BLU LABS</span>
+            </div>
+            <div class="w-32 h-[1px] bg-white/10 mx-auto relative overflow-hidden">
+                <div id="loader-progress" class="absolute inset-0 bg-cyan-400 -translate-x-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-[100] px-6 md:px-12 py-5 md:py-8 flex justify-between items-center transition-all duration-700" id="main-nav">
+        <div class="text-2xl md:text-3xl font-black italic tracking-tighter">BLU.</div>
+        <div class="hidden lg:flex space-x-12 text-[9px] font-bold tracking-[0.4em] uppercase opacity-70">
+            <a href="#hero" class="nav-link hover:text-cyan-400 transition-all">Origins</a>
+            <a href="#visionary" class="nav-link hover:text-cyan-400 transition-all">The Visionary</a>
+            <a href="#lab" class="nav-link hover:text-cyan-400 transition-all">The Lab</a>
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="magnetic-btn hidden sm:block bg-white text-black px-8 py-2.5 rounded-full text-[8px] font-black uppercase tracking-widest hover:bg-cyan-400 transition-all">
+                Secure The Drop
+            </button>
+            <button id="menu-toggle" class="lg:hidden w-10 h-10 flex flex-col justify-center items-end gap-1.5 z-[101]">
+                <span class="w-8 h-[2px] bg-white"></span>
+                <span class="w-5 h-[2px] bg-white"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black z-[99] flex flex-col justify-center px-12 lg:hidden">
+        <div class="space-y-8">
+            <a href="#hero" class="mobile-nav-link block text-5xl font-black italic uppercase tracking-tighter">Origins</a>
+            <a href="#visionary" class="mobile-nav-link block text-5xl font-black italic uppercase tracking-tighter">The Visionary</a>
+            <a href="#lab" class="mobile-nav-link block text-5xl font-black italic uppercase tracking-tighter">The Lab</a>
+        </div>
+        <div class="mt-20 border-t border-white/10 pt-10">
+            <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-500 mb-4">Follow The Movement</p>
+            <div class="flex gap-8 text-[10px] font-black uppercase">
+                <a href="#">Instagram</a>
+                <a href="#">Facebook</a>
+                <a href="#">YouTube</a>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <!-- Hero -->
+        <section id="hero" class="relative min-h-[100svh] flex items-center justify-center px-6 md:px-12 pt-20 overflow-hidden">
+            <div class="blob w-[60vw] h-[60vw] bg-cyan-500 top-[-20%] left-[-10%]" id="blob-1"></div>
+            <div class="blob w-[50vw] h-[50vw] bg-blue-900 bottom-[-10%] right-[-10%]" id="blob-2"></div>
+            
+            <div class="container mx-auto">
+                <div class="grid lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-8 z-10">
+                        <div class="overflow-hidden mb-6">
+                            <span id="hero-mini" class="inline-block text-[10px] font-extrabold uppercase tracking-[0.5em] text-cyan-400">Ionized Hydration System 2.0</span>
+                        </div>
+                        <h1 class="hero-heading uppercase italic" id="hero-main-title">
+                            OWN <br> <span class="text-cyan-400">YOUR</span> <br> FREQUENCY.
+                        </h1>
+                        <div class="mt-12 flex flex-col md:flex-row items-start md:items-center gap-12" id="hero-details">
+                            <p class="max-w-xs text-[11px] text-gray-500 leading-relaxed uppercase tracking-wider">
+                                Engineered by <span class="text-white">Rafsan TheChotoBhai</span>. Not just a drink, but a high-performance bio-hack for the ambitious. 
+                                <span class="block mt-2 font-bold text-white/40">Zero sugar. Pure focus.</span>
+                            </p>
+                            <div class="flex gap-8 border-l border-white/10 pl-8">
+                                <div class="spec-item">
+                                    <p class="text-[14px] font-black italic">80MG</p>
+                                    <p class="text-[8px] text-gray-500 uppercase tracking-widest">Caffeine</p>
+                                </div>
+                                <div class="spec-item" style="--primary: #ff2d55;">
+                                    <p class="text-[14px] font-black italic">0%</p>
+                                    <p class="text-[8px] text-gray-500 uppercase tracking-widest">Crash</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4 relative flex justify-center py-10">
+                        <div id="hero-card" class="relative w-full max-w-[320px] aspect-[2/3.5] glass-card p-10 flex flex-col items-center justify-between group overflow-hidden border-cyan-400/20">
+                            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-transparent"></div>
+                            <div class="z-10 text-center">
+                                <p class="text-[9px] font-black tracking-[0.5em] text-white/30 uppercase mb-2">Primary Spec</p>
+                                <h3 class="text-5xl font-black italic tracking-tighter">BLUE BOLT</h3>
+                            </div>
+                            <div class="absolute bottom-0 left-0 w-full bg-cyan-400/20 backdrop-blur-md h-0" id="liquid-fill"></div>
+                            <div class="z-10 w-full py-4 rounded-2xl border border-white/10 text-center text-[10px] font-black uppercase tracking-[0.2em] bg-black/40">
+                                500ML IONIZED
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Visionary (Rafsan Section) -->
+        <section id="visionary" class="py-24 md:py-40 px-6 md:px-12 relative overflow-hidden bg-[#050505]">
+            <div class="container mx-auto">
+                <div class="grid lg:grid-cols-2 gap-16 items-center">
+                    <div class="order-2 lg:order-1 relative group">
+                        <div class="absolute -inset-4 bg-cyan-400/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                        <div class="glass-card overflow-hidden aspect-[4/5] relative">
+                            <!-- Use a high-quality stylized image of Rafsan here -->
+                            <img src="https://www.tbsnews.net/sites/default/files/styles/infograph/public/images/2021/07/18/img_8836.jpeg" alt="Rafsan TheChotoBhai" class="w-full h-full object-cover transition-all duration-1000">
+                            <div class="absolute bottom-8 left-8">
+                                <p class="text-4xl signature-font text-white">Rafsan</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-1 lg:order-2">
+                        <p class="text-cyan-400 text-[10px] font-bold uppercase tracking-[0.5em] mb-4">The Founder</p>
+                        <h2 class="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none mb-10">THE <br> MIND <br> BEHIND.</h2>
+                        <p class="text-gray-400 text-sm md:text-base uppercase tracking-widest leading-loose mb-8">
+                            "BLU isn't just a business for me. It's a statement. I wanted to create something that matches the energy of the youth—something pure, powerful, and proudly Bangladeshi."
+                        </p>
+                        <p class="text-white font-black italic text-xl uppercase tracking-tighter">Rafsan TheChotoBhai</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Flavor Lab (All Variants) -->
+        <section id="lab" class="py-24 md:py-40 px-6 md:px-12 bg-[#050505] relative z-10">
+            <div class="container mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 md:mb-24 gap-8">
+                    <div>
+                        <p class="text-cyan-400 text-[10px] font-bold uppercase tracking-[0.5em] mb-4">Product Ecosystem</p>
+                        <h2 class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter">The Flavor Lab.</h2>
+                    </div>
+                    <p class="max-w-xs text-gray-600 text-[10px] font-bold uppercase tracking-widest leading-loose">
+                        Four proprietary blends engineered for specific physiological states. Choose your fuel.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Blue Bolt -->
+                    <div class="flavor-card glass-card p-8 group overflow-hidden flex flex-col" style="--card-accent: #00f2ff; --shadow-color: rgba(0, 242, 255, 0.4);">
+                        <div class="flavor-img-wrapper h-64 mb-8 flex items-center justify-center relative">
+                            <div class="absolute w-40 h-40 bg-cyan-400/20 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <img src="images/blue-bolt-can.png" alt="BLU Blue Bolt" 
+                                 class="flavor-img h-64 w-auto object-contain relative z-10">
+                        </div>
+                        <div class="mt-auto">
+                            <h4 class="text-2xl font-black italic uppercase mb-2">Blue Bolt</h4>
+                            <p class="text-cyan-400 text-[9px] font-bold tracking-widest mb-4 uppercase">Focus & Recovery</p>
+                            <p class="text-gray-500 text-[10px] leading-relaxed uppercase tracking-wider">A sharp, glacial blueberry infusion balanced with essential electrolytes for peak neural connectivity.</p>
+                            <ul class="mt-4 space-y-1 text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                                <li>• Ionized Magnesium: 45mg</li>
+                                <li>• Potassium Citrate: 120mg</li>
+                                <li>• L-Theanine: 50mg</li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-sm font-bold tracking-tighter">৳35</span>
+                            <button class="text-[9px] font-black uppercase tracking-widest bg-white text-black px-4 py-2 rounded-full hover:bg-cyan-400 transition-colors">Buy</button>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">0 Sugar</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">80mg Caffeine</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">L-Theanine</span>
+                        </div>
+                    </div>
+
+                    <!-- Electric Lychee -->
+                    <div class="flavor-card glass-card p-8 group overflow-hidden flex flex-col" style="--card-accent: #ff2d55; --shadow-color: rgba(255, 45, 85, 0.4);">
+                        <div class="flavor-img-wrapper h-64 mb-8 flex items-center justify-center relative">
+                            <div class="absolute w-40 h-40 bg-pink-500/20 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <img src="images/lychee-vibe-can.png" alt="BLU Lychee Vibe" 
+                                 class="flavor-img h-64 w-auto object-contain relative z-10">
+                        </div>
+                        <div class="mt-auto">
+                            <h4 class="text-2xl font-black italic uppercase mb-2">Electric Lychee</h4>
+                            <p class="text-pink-500 text-[9px] font-bold tracking-widest mb-4 uppercase">Creative Flow</p>
+                            <p class="text-gray-500 text-[10px] leading-relaxed uppercase tracking-wider">Exotic floral notes with a crisp, bio-static finish designed to sustain prolonged creative flow states.</p>
+                            <ul class="mt-4 space-y-1 text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                                <li>• B12 Complex: 100% DV</li>
+                                <li>• Ginseng Extract: 25mg</li>
+                                <li>• Pink Himalayan Salt</li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-sm font-bold tracking-tighter">৳35</span>
+                            <button class="text-[9px] font-black uppercase tracking-widest bg-white text-black px-4 py-2 rounded-full hover:bg-pink-500 transition-colors">Buy</button>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">0 Sugar</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">B-Vitamins</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">Ginseng Root</span>
+                        </div>
+                    </div>
+
+                    <!-- Crimson Rush -->
+                    <div class="flavor-card glass-card p-8 group overflow-hidden flex flex-col" style="--card-accent: #ff0000; --shadow-color: rgba(255, 0, 0, 0.4);">
+                        <div class="flavor-img-wrapper h-64 mb-8 flex items-center justify-center relative">
+                            <div class="absolute w-40 h-40 bg-red-500/20 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <img src="images/crimson-rush-can.png" alt="BLU Crimson Rush" 
+                                 class="flavor-img h-64 w-auto object-contain relative z-10">
+                        </div>
+                        <div class="mt-auto">
+                            <h4 class="text-2xl font-black italic uppercase mb-2">Crimson Rush</h4>
+                            <p class="text-red-500 text-[9px] font-bold tracking-widest mb-4 uppercase">Endurance Core</p>
+                            <p class="text-gray-500 text-[10px] leading-relaxed uppercase tracking-wider">A high-velocity blend of wild strawberry and dragonfruit for maximum cardiovascular output.</p>
+                            <ul class="mt-4 space-y-1 text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                                <li>• Taurine: 1000mg</li>
+                                <li>• Beta-Alanine: 200mg</li>
+                                <li>• Nitric Oxide Boosters</li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-sm font-bold tracking-tighter">৳35</span>
+                            <button class="text-[9px] font-black uppercase tracking-widest bg-white text-black px-4 py-2 rounded-full hover:bg-red-500 transition-colors">Buy</button>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">0 Sugar</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">Taurine+</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">Beta-Alanine</span>
+                        </div>
+                    </div>
+
+                    <!-- Neon Citrus -->
+                    <div class="flavor-card glass-card p-8 group overflow-hidden flex flex-col" style="--card-accent: #ccff00; --shadow-color: rgba(204, 255, 0, 0.4);">
+                        <div class="flavor-img-wrapper h-64 mb-8 flex items-center justify-center relative">
+                            <div class="absolute w-40 h-40 bg-lime-400/20 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <img src="images/neon-citrus-can.png" alt="BLU Neon Citrus" 
+                                 class="flavor-img h-64 w-auto object-contain relative z-10">
+                        </div>
+                        <div class="mt-auto">
+                            <h4 class="text-2xl font-black italic uppercase mb-2">Neon Citrus</h4>
+                            <p class="text-lime-400 text-[9px] font-bold tracking-widest mb-4 uppercase">Alkaline Balance</p>
+                            <p class="text-gray-500 text-[10px] leading-relaxed uppercase tracking-wider">Yuzu and lime stabilized with pink Himalayan salt for clean, all-day hydration stability.</p>
+                            <ul class="mt-4 space-y-1 text-[8px] font-bold uppercase tracking-tighter text-white/40">
+                                <li>• pH Level: 8.5 (Alkaline)</li>
+                                <li>• Vitamin C: 90mg</li>
+                                <li>• Natural Electrolytes</li>
+                            </ul>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-sm font-bold tracking-tighter">৳35</span>
+                            <button class="text-[9px] font-black uppercase tracking-widest bg-white text-black px-4 py-2 rounded-full hover:bg-lime-400 transition-colors">Buy</button>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">0 Sugar</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">Electrolytes</span>
+                            <span class="text-[7px] border border-white/10 px-2 py-1 rounded opacity-40 uppercase">Alkaline pH</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Protocol (Usage) -->
+        <section id="protocol" class="pt-8 pb-24 md:pt-20 md:pb-40 bg-[#080808] px-6 md:px-12 border-y border-white/5">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-black italic uppercase mb-12 md:mb-16 text-center">Optimization Protocol</h2>
+                <div class="grid md:grid-cols-3 gap-6 md:gap-8">
+                    <div class="protocol-step p-10 rounded-3xl">
+                        <div class="text-cyan-400 text-4xl font-black italic mb-6">01</div>
+                        <h5 class="text-lg font-bold mb-4 uppercase tracking-tighter">Thermal Prep</h5>
+                        <p class="text-gray-500 text-[10px] leading-loose uppercase tracking-widest">Chill to exactly 4°C for maximum carbonation stability and flavor profile crispness.</p>
+                    </div>
+                    <div class="protocol-step p-10 rounded-3xl border-cyan-400/20">
+                        <div class="text-cyan-400 text-4xl font-black italic mb-6">02</div>
+                        <h5 class="text-lg font-bold mb-4 uppercase tracking-tighter">Activation</h5>
+                        <p class="text-gray-500 text-[10px] leading-loose uppercase tracking-widest">Invert the can gently before opening to re-distribute ionized trace minerals.</p>
+                    </div>
+                    <div class="protocol-step p-10 rounded-3xl">
+                        <div class="text-cyan-400 text-4xl font-black italic mb-6">03</div>
+                        <h5 class="text-lg font-bold mb-4 uppercase tracking-tighter">System Entry</h5>
+                        <p class="text-gray-500 text-[10px] leading-loose uppercase tracking-widest">Consume 20 minutes before high-stakes tasks for peak neural connectivity.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-16 px-6 md:px-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">
+        <p>© 2026 BLU LABS — BY RAFSAN THECHOTOBHAI</p>
+        <p>Innovation Of Bangladesh</p>
+    </footer>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Preloader
+        const loaderTl = gsap.timeline();
+        loaderTl.to("#loader-progress", { x: "0%", duration: 1.5, ease: "expo.inOut" })
+                .to("#loader-title", { y: -60, duration: 0.6, ease: "power4.in" })
+                .to("#loader", { y: "-100%", duration: 1.2, ease: "expo.inOut" });
+
+        // Cursor
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        
+        // Mobile Menu Toggle Logic
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => mobileMenu.classList.remove('active'));
+        });
+
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (!isTouchDevice && window.matchMedia("(pointer: fine)").matches) {
+            document.addEventListener('mousemove', (e) => {
+                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0 });
+                gsap.to(follower, { 
+                    x: e.clientX - 17, y: e.clientY - 17, 
+                    duration: 0.3, ease: "power2.out" 
+                });
+            });
+        }
+
+        // Nav and Scroll
+        ScrollTrigger.create({
+            start: "top -80",
+            onEnter: () => document.getElementById('main-nav').classList.add('nav-active'),
+            onLeaveBack: () => document.getElementById('main-nav').classList.remove('nav-active'),
+        });
+
+        // Hero Liquid Fill
+        loaderTl.to("#liquid-fill", { height: "45%", duration: 2, ease: "power2.inOut" }, "-=0.5");
+
+        gsap.to("#scroll-bar", {
+            width: "100%",
+            ease: "none",
+            scrollTrigger: { scrub: 0.1 }
+        });
+
+        // Magnetic Buttons
+        if (!isTouchDevice) {
+            document.querySelectorAll('.magnetic-btn').forEach(btn => {
+                btn.addEventListener('mousemove', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    gsap.to(btn, {
+                        x: x * 0.3, y: y * 0.3,
+                        duration: 0.3, ease: "power2.out"
+                    });
+                });
+                btn.addEventListener('mouseleave', () => {
+                    gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+                });
+            });
+        }
+
+        // Animations
+        gsap.from("#hero-mini", { delay: 2.2, opacity: 0, x: -30, duration: 1 });
+        gsap.from("#hero-main-title", { delay: 2.4, opacity: 0, y: 100, skewY: 7, duration: 1.5, ease: "expo.out" });
+
+        // Visionary Section Animation
+        gsap.from("#visionary img", {
+            scrollTrigger: {
+                trigger: "#visionary",
+                start: "top 70%",
+            },
+            scale: 1.2,
+            filter: "brightness(0%)",
+            opacity: 0,
+            duration: 2,
+            ease: "expo.out"
+        });
+
+        // Lab Cards Animation
+        gsap.from(".flavor-card", {
+            scrollTrigger: {
+                trigger: "#lab",
+                start: "top 85%",
+                once: true
+            },
+            y: window.innerWidth < 768 ? 40 : 100,
+            opacity: 0,
+            stagger: 0.1,
+            duration: 1.2,
+            ease: "expo.out",
+            onComplete: () => {
+                gsap.set(".flavor-card", { clearProps: "all" });
+            }
+        });
+
+        // Hover Effect Global
+        if (!isTouchDevice) {
+            document.querySelectorAll('button, .glass-card, a').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    gsap.to(follower, { scale: 1.5, backgroundColor: 'rgba(0, 242, 255, 0.1)' });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(follower, { scale: 1, backgroundColor: 'transparent' });
+                });
+            });
+        }
+
+        // Fix ScrollTrigger positions after all assets load
+        window.addEventListener('load', () => {
+            ScrollTrigger.refresh();
+        });
+
+    </script>
+</body>
+</html>
